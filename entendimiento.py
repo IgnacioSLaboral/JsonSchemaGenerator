@@ -1,6 +1,7 @@
 import json
 from jsonschema import Draft7Validator, ErrorTree, validate, SchemaError, ValidationError
-import collections
+import openpyxl
+from fcn_generales import obtener_datos_excel
 
 
 #Recibo las keys por las que debo pasar y los tipos de dichas keys, devuelvo el nivel en el cual se debe agregar la información
@@ -44,7 +45,6 @@ def generate_json_schema(keys, mandatory, types, enum):
     for key, is_mandatory, data_type, enum in zip(keys, mandatory, types, enum):
         current_level = schema["properties"]
         listaKeys = key.split(".")
-        print(listaKeys)
         n = listaKeys[0]
         # Si el largo de la lista es igual a 1, significa que estamos en la base del schema, por lo tanto
         # No debemos hacer cambios sobre ListaKeys[-1], de esta forma diferenciamos los que si son hijos de los que son padres
@@ -138,15 +138,18 @@ def generate_json_schema(keys, mandatory, types, enum):
 
 
 
-keys = ["data", "data.id", "data.address", "data.address.state", "data.address.state.id", "data.address.state.name", "data.address.city", "data.address.zipCode", "data.address.country", "data.address.country.id", "data.address.country.name", "data.address.geolocation", "data.address.geolocation.latitude", "data.address.geolocation.longitude", "data.distance", "data.description", "data.estimatedWaitingTime", "data.availableServices", "data.availableServices.id", "data.isOpen", "data.hasDigitalAppointment", "data.branchType", "data.branchType.id", "data.branchType.description", "data.atmsInBranch", "data.atmsInBranch.id", "data.atmsInBranch.number", "data.links", "data.links.id", "data.links.rel", "data.links.href", "data.links.method"]
+"""keys = ["data", "data.id", "data.address", "data.address.state", "data.address.state.id", "data.address.state.name", "data.address.city", "data.address.zipCode", "data.address.country", "data.address.country.id", "data.address.country.name", "data.address.geolocation", "data.address.geolocation.latitude", "data.address.geolocation.longitude", "data.distance", "data.description", "data.estimatedWaitingTime", "data.availableServices", "data.availableServices.id", "data.isOpen", "data.hasDigitalAppointment", "data.branchType", "data.branchType.id", "data.branchType.description", "data.atmsInBranch", "data.atmsInBranch.id", "data.atmsInBranch.number", "data.links", "data.links.id", "data.links.rel", "data.links.href", "data.links.method"]
 #keys = ["data", "data.id"]
 mandatory = [True, True, True, True, False, False, False, True, True, True, True, True, True, True, True, True, False, False, True, False, False, False, True, False, False, False, False, True, True, True, True, True]
 #mandatory = [True, True ]
 types = ["Object[]", "String", "Object", "Object", "String", "String", "String", "String", "Object", "String", "String", "Object", "Number", "Number", "Number", "String", "Number", "Object[]", "String", "Boolean", "Boolean", "Object", "Enum", "String", "Object[]", "Enum", "Number", "Object[]", "String", "String", "String", "Enum"]
 #types = ["Object[]", "String"]
 enum = ["","","","","","","","","","","","","","","","","","","","","","",["Pepito1","Pepito2"],"","",["prueba","prueba2"],"","","","","",["Pepito","pepito2"]]
+"""
+#---------------------------OBTENCIÓN DE DATOS------------------------
 
 
+keys,mandatory,types,enum = obtener_datos_excel("C:\\Users\\ignacio.sambrailo\\Downloads\\prueba2.xlsx")
 
 
 #---------------------------GENERACION SCHEMA--------------------------
@@ -154,14 +157,11 @@ enum = ["","","","","","","","","","","","","","","","","","","","","","",["Pepi
 schema = generate_json_schema(keys,mandatory,types,enum)
 print(schema)
 
-
-
-
 #------------------------------VALIDACION-------------------------------
 
 
 
-f = open('response.json')
+f = open('prueba2.json')
 
 # returns JSON object as
 # a dictionary
@@ -171,9 +171,17 @@ validator = Draft7Validator(schema)
 #errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
 
 errors = validator.iter_errors(data)  # get all validation errors
-for error in errors:
-    print(error.message)
-    print('.'.join(str(v) for v in error.path))
-    print(error.validator)
-    print('------')
+
+
+if validator.is_valid(data):
+    print("Validación exitosa, no se han hallado errores!")
+else:
+    print("VALIDADIÓN FALLIDA")
+    for error in errors:
+        print(error.message)
+        print('.'.join(str(v) for v in error.path))
+        print(error.validator)
+        print('------')
+
+
 
